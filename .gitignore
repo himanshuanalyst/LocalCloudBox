@@ -1,0 +1,13 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual Environment
+venv/
+env/
+
+# User Data (Personal files upload nahi honi chahiye)
+My_Documents/
+
+# Mac OS trash files
+.DS_Store

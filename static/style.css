@@ -1,0 +1,199 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+    --primary-color: #0d6efd;
+    --bg-color: #f3f5f9;
+    --card-bg: #ffffff;
+    --text-main: #212529;
+    /* Dark Text for Light Mode */
+    --text-muted: #6c757d;
+    --border-color: #e9ecef;
+    --table-hover: #f8faff;
+    --input-bg: #ffffff;
+    --modal-header: #f8f9fa;
+}
+
+[data-theme="dark"] {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-main: #e0e0e0;
+    /* Light Text for Dark Mode */
+    --text-muted: #adb5bd;
+    --border-color: #373b3e;
+    --table-hover: #2c2c2c;
+    --input-bg: #2d2d2d;
+    --modal-header: #2d2d2d;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* --- FORCE DARK MODE TEXT VISIBILITY --- */
+[data-theme="dark"] .text-dark {
+    color: #e0e0e0 !important;
+    /* Bootstrap ki black text ko white karein */
+}
+
+[data-theme="dark"] .text-muted {
+    color: #b0b3b8 !important;
+}
+
+[data-theme="dark"] .bg-light {
+    background-color: #2d2d2d !important;
+    /* Light grey bg ko dark karein */
+    color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] .bg-white {
+    background-color: #1e1e1e !important;
+    color: #e0e0e0 !important;
+}
+
+/* Navbar */
+.navbar {
+    background-color: var(--card-bg) !important;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.8rem 1rem;
+}
+
+.navbar-brand {
+    color: var(--primary-color) !important;
+    font-weight: 700;
+}
+
+/* Cards & Containers */
+.card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+/* Inputs & Search Bar */
+.form-control,
+.input-group-text {
+    background-color: var(--input-bg) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+/* Table Styling */
+.table {
+    color: var(--text-main) !important;
+    margin-bottom: 0;
+}
+
+.table thead {
+    background-color: var(--bg-color);
+}
+
+.table th {
+    background-color: var(--card-bg);
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+}
+
+.table td {
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--table-hover) !important;
+    color: var(--text-main) !important;
+}
+
+/* Modals */
+.modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--modal-header);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-close {
+    filter: var(--btn-close-filter);
+    /* Close button color fix */
+}
+
+[data-theme="dark"] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Links & Icons */
+a {
+    text-decoration: none;
+}
+
+.item-name-text {
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.item-name-text:hover {
+    color: var(--primary-color);
+}
+
+/* Drag & Drop */
+.drop-zone {
+    border: 2px dashed var(--primary-color);
+    border-radius: 10px;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+}
+
+.drop-zone.dragover {
+    background-color: rgba(13, 110, 253, 0.1);
+    transform: scale(1.02);
+}
+
+/* File Icons Colors */
+.bi-folder-fill {
+    color: #f9ca24;
+}
+
+.bi-file-pdf {
+    color: #e74c3c;
+}
+
+.bi-file-image {
+    color: #2ecc71;
+}
+
+.bi-file-earmark-spreadsheet {
+    color: #27ae60;
+}
+
+.bi-file-word {
+    color: #2980b9;
+}
+
+/* Dark Mode Toggle */
+.theme-toggle {
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--text-main);
+    transition: transform 0.2s;
+}
+
+.theme-toggle:hover {
+    transform: rotate(15deg);
+    color: var(--primary-color);
+}

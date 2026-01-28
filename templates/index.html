@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cloud Drive</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg px-4">
+        <a class="navbar-brand" href="#"><i class="bi bi-cloud-check-fill"></i> CloudBox</a>
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <button class="btn btn-sm btn-outline-secondary rounded-circle theme-toggle" id="darkModeToggle"
+                title="Toggle Theme">
+                <i class="bi bi-moon-fill"></i>
+            </button>
+            <span class="text-muted small fw-bold">ADMIN</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger rounded-pill px-3">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm border-0">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="card mb-3 shadow-sm border-0">
+            <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <nav aria-label="breadcrumb" class="d-flex align-items-center">
+                    <ol class="breadcrumb mb-0 small">
+                        {% for bread in breadcrumbs %}
+                        <li class="breadcrumb-item">
+                            {% if loop.last %}
+                            <span class="fw-bold text-muted">{{ bread.name if bread.name else 'Home' }}</span>
+                            {% else %}
+                            <a href="{{ url_for('index', subpath=bread.path) }}"
+                                class="text-decoration-none text-primary">{{ bread.name if bread.name else 'Home' }}</a>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </nav>
+
+                <div class="d-flex gap-2 align-items-center">
+                    {% if group_by == 'type' %}
+                    <a href="{{ url_for('index', subpath=current_path) }}"
+                        class="btn btn-sm btn-primary px-3 rounded-pill" title="Ungroup View">
+                        <i class="bi bi-layers-fill"></i> Ungroup
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('index', subpath=current_path, group_by='type') }}"
+                        class="btn btn-sm btn-outline-secondary px-3 rounded-pill" title="Group by File Type">
+                        <i class="bi bi-layers"></i> Group By
+                    </a>
+                    {% endif %}
+
+                    <div class="input-group input-group-sm" style="width: 200px;">
+                        <span class="input-group-text border-end-0 text-muted ps-3"><i class="bi bi-search"></i></span>
+                        <input type="text" id="searchInput" class="form-control border-start-0 ps-0"
+                            placeholder="Search..." onkeyup="filterTable()" style="box-shadow: none;">
+                    </div>
+
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-primary px-3 d-flex align-items-center gap-2" data-bs-toggle="modal"
+                            data-bs-target="#uploadModal">
+                            <i class="bi bi-cloud-upload"></i> Upload
+                        </button>
+                        <button class="btn btn-outline-secondary px-3" data-bs-toggle="modal"
+                            data-bs-target="#folderModal" title="New Folder">
+                            <i class="bi bi-folder-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form action="{{ url_for('bulk_action') }}" method="POST" id="bulkForm">
+            <input type="hidden" name="current_path" value="{{ current_path }}">
+
+            <div class="d-flex mb-3 align-items-center card p-2 flex-row border shadow-sm" id="selectionBar"
+                style="display:none !important;">
+                <span class="me-3 fw-bold text-primary ms-2"><span id="countSelected">0</span> Selected</span>
+                <button type="submit" name="action" value="download"
+                    class="btn btn-sm btn-success me-2 rounded-pill px-3"><i class="bi bi-download"></i> Zip</button>
+                <button type="submit" name="action" value="delete" class="btn btn-sm btn-danger rounded-pill px-3"
+                    onclick="return confirm('Permanently delete selected items?')"><i class="bi bi-trash"></i>
+                    Delete</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="fileTable">
+                    <thead>
+                        <tr>
+                            <th width="40"><input type="checkbox" id="selectAll" class="file-check"></th>
+
+                            <th>
+                                <a href="?sort=name&order={{ 'desc' if sort_by=='name' and order=='asc' else 'asc' }}{{ '&group_by=type' if group_by == 'type' else '' }}"
+                                    class="text-decoration-none text-muted d-block user-select-none">
+                                    Name
+                                    {% if sort_by == 'name' %}
+                                    <i
+                                        class="bi bi-arrow-{{ 'down' if order=='asc' else 'up' }} small ms-1 text-primary"></i>
+                                    {% else %}
+                                    <i class="bi bi-arrow-down-up small ms-1 text-muted opacity-50"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+
+                            <th width="180">
+                                <a href="?sort=date&order={{ 'desc' if sort_by=='date' and order=='asc' else 'asc' }}{{ '&group_by=type' if group_by == 'type' else '' }}"
+                                    class="text-decoration-none text-muted d-block user-select-none">
+                                    Date
+                                    {% if sort_by == 'date' %}
+                                    <i
+                                        class="bi bi-arrow-{{ 'down' if order=='asc' else 'up' }} small ms-1 text-primary"></i>
+                                    {% else %}
+                                    <i class="bi bi-arrow-down-up small ms-1 text-muted opacity-50"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+
+                            <th width="100">
+                                <a href="?sort=type&order={{ 'desc' if sort_by=='type' and order=='asc' else 'asc' }}{{ '&group_by=type' if group_by == 'type' else '' }}"
+                                    class="text-decoration-none text-muted d-block user-select-none">
+                                    Type
+                                    {% if sort_by == 'type' %}
+                                    <i
+                                        class="bi bi-arrow-{{ 'down' if order=='asc' else 'up' }} small ms-1 text-primary"></i>
+                                    {% else %}
+                                    <i class="bi bi-arrow-down-up small ms-1 text-muted opacity-50"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+
+                            <th width="100">
+                                <a href="?sort=size&order={{ 'desc' if sort_by=='size' and order=='asc' else 'asc' }}{{ '&group_by=type' if group_by == 'type' else '' }}"
+                                    class="text-decoration-none text-muted d-block user-select-none">
+                                    Size
+                                    {% if sort_by == 'size' %}
+                                    <i
+                                        class="bi bi-arrow-{{ 'down' if order=='asc' else 'up' }} small ms-1 text-primary"></i>
+                                    {% else %}
+                                    <i class="bi bi-arrow-down-up small ms-1 text-muted opacity-50"></i>
+                                    {% endif %}
+                                </a>
+                            </th>
+
+                            <th width="100" class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set ns = namespace(last_type=None) %}
+                        {% for item in items %}
+                        {% if group_by == 'type' and item.type != ns.last_type %}
+                        <tr class="group-header-row bg-light" id="emptyRow">
+                            <td colspan="6" class="py-2 px-3 fw-bold text-primary text-uppercase small"
+                                style="background-color: var(--bg-color); letter-spacing: 1px;">
+                                {% if item.is_dir %}
+                                <i class="bi bi-folder2-open me-2"></i> Folders
+                                {% else %}
+                                <i class="bi bi-file-earmark me-2"></i> {{ item.type }} Files
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% set ns.last_type = item.type %}
+                        {% endif %}
+
+                        <tr>
+                            <td><input type="checkbox" name="selected_files" value="{{ item.name }}" class="file-check">
+                            </td>
+                            <td>
+                                {% if item.is_dir %}
+                                <a href="{{ url_for('index', subpath=item.path) }}"
+                                    class="fw-bold text-dark text-decoration-none d-flex align-items-center">
+                                    <i class="bi bi-folder-fill fs-5 me-3"></i> <span class="item-name-text">{{
+                                        item.name }}</span>
+                                </a>
+                                {% else %}
+                                <a href="#" onclick="openPreview('{{ item.path }}')"
+                                    class="text-dark text-decoration-none d-flex align-items-center">
+                                    {% if item.type in ['JPG','PNG','JPEG'] %} <i
+                                        class="bi bi-file-image fs-5 me-3"></i>
+                                    {% elif item.type == 'PDF' %} <i class="bi bi-file-pdf fs-5 me-3"></i>
+                                    {% elif item.type in ['XLS','XLSX','CSV'] %} <i
+                                        class="bi bi-file-earmark-spreadsheet fs-5 me-3"></i>
+                                    {% elif item.type in ['DOC','DOCX'] %} <i class="bi bi-file-word fs-5 me-3"></i>
+                                    {% else %} <i class="bi bi-file-text fs-5 me-3"></i>
+                                    {% endif %}
+                                    <span class="item-name-text">{{ item.name }}</span>
+                                </a>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ item.date }}</td>
+                            <td><span class="badge bg-light text-secondary border">{{ item.type }}</span></td>
+                            <td class="text-muted small">{{ item.size }}</td>
+                            <td class="text-end">
+                                <div class="btn-group">
+                                    {% if not item.is_dir %}
+                                    <button type="button" onclick="openPreview('{{ item.path }}')"
+                                        class="btn btn-sm btn-light text-secondary" title="View"><i
+                                            class="bi bi-eye"></i></button>
+                                    {% endif %}
+                                    <button type="button" onclick="openRenameModal('{{ item.name }}')"
+                                        class="btn btn-sm btn-light text-secondary" title="Rename"><i
+                                            class="bi bi-pencil"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr id="emptyRow">
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-cloud-slash display-4 opacity-25"></i>
+                                <p class="mt-2 small">This folder is empty.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+
+    <div class="modal fade" id="previewModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content" id="previewContent"></div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="uploadModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" class="w-100">
+                <div class="modal-content">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title fw-bold">Upload Files</h5><button type="button" class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="current_path" value="{{ current_path }}">
+                        <div class="p-5 drop-zone text-center" id="dropZone">
+                            <i class="bi bi-cloud-arrow-up display-4 text-primary mb-3"></i>
+                            <p class="mb-2 fw-bold">Drag & Drop files here</p>
+                            <p class="small text-muted mb-3">or click to browse</p>
+                            <input type="file" name="files" id="fileInput" class="form-control d-none" multiple
+                                required>
+                            <button type="button" class="btn btn-outline-primary rounded-pill px-4"
+                                onclick="document.getElementById('fileInput').click()">Browse Files</button>
+                            <div id="fileList" class="mt-3 small text-start"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0"><button type="submit"
+                            class="btn btn-primary px-4 rounded-pill">Start Upload</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="folderModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form action="{{ url_for('create_folder') }}" method="post" class="w-100">
+                <div class="modal-content">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title fw-bold">New Folder</h5><button type="button" class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="current_path" value="{{ current_path }}">
+                        <input type="text" name="folder_name" class="form-control form-control-lg"
+                            placeholder="Folder Name" required>
+                    </div>
+                    <div class="modal-footer border-0"><button type="submit"
+                            class="btn btn-primary px-4 rounded-pill">Create</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="renameModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form action="{{ url_for('rename_item') }}" method="post" class="w-100">
+                <div class="modal-content">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title fw-bold">Rename</h5><button type="button" class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="current_path" value="{{ current_path }}">
+                        <input type="hidden" name="old_name" id="oldNameInput">
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">New Name</label>
+                            <input type="text" name="new_name" id="newNameInput" class="form-control form-control-lg"
+                                required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="submit" class="btn btn-primary px-4 rounded-pill">Save Changes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Dark Mode Logic
+        const themeToggle = document.getElementById('darkModeToggle');
+        const icon = themeToggle.querySelector('i');
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            icon.classList.replace('bi-moon-fill', 'bi-sun-fill');
+        }
+        themeToggle.addEventListener('click', () => {
+            if (document.body.getAttribute('data-theme') === 'dark') {
+                document.body.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                icon.classList.replace('bi-sun-fill', 'bi-moon-fill');
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                icon.classList.replace('bi-moon-fill', 'bi-sun-fill');
+            }
+        });
+
+        // Drag & Drop
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
+        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); fileInput.files = e.dataTransfer.files; updateFileList(); });
+        fileInput.addEventListener('change', updateFileList);
+        function updateFileList() { fileList.innerHTML = ''; Array.from(fileInput.files).forEach(file => { fileList.innerHTML += `<div class="text-success"><i class="bi bi-check-circle"></i> ${file.name}</div>`; }); }
+
+        // Rename
+        function openRenameModal(oldName) { document.getElementById('oldNameInput').value = oldName; document.getElementById('newNameInput').value = oldName; new bootstrap.Modal(document.getElementById('renameModal')).show(); }
+
+        // Search
+        function filterTable() { const input = document.getElementById('searchInput'); const filter = input.value.toLowerCase(); const rows = document.querySelectorAll('tbody tr'); rows.forEach(row => { if (row.id === 'emptyRow' || row.classList.contains('group-header-row')) return; const nameText = row.querySelector('.item-name-text')?.innerText || ""; row.style.display = nameText.toLowerCase().indexOf(filter) > -1 ? "" : "none"; }); }
+
+        // Selection
+        const selectAll = document.getElementById('selectAll');
+        const selectionBar = document.getElementById('selectionBar');
+        const countSpan = document.getElementById('countSelected');
+        function updateSelection() { let count = 0; const itemChecks = document.querySelectorAll('input[name="selected_files"]'); itemChecks.forEach(cb => { if (cb.checked) count++; }); countSpan.innerText = count; selectionBar.style.display = count > 0 ? 'flex' : 'none'; selectionBar.style.setProperty("display", count > 0 ? "flex" : "none", "important"); }
+        selectAll.addEventListener('change', function () { const itemChecks = document.querySelectorAll('input[name="selected_files"]'); itemChecks.forEach(cb => cb.checked = this.checked); updateSelection(); });
+        document.querySelectorAll('input[name="selected_files"]').forEach(cb => cb.addEventListener('change', updateSelection));
+
+        // Preview
+        function openPreview(path) { const modal = new bootstrap.Modal(document.getElementById('previewModal')); document.getElementById('previewContent').innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Loading Preview...</p></div>'; modal.show(); fetch(`/view_file?path=${encodeURIComponent(path)}`).then(response => response.text()).then(html => { document.getElementById('previewContent').innerHTML = html; }); }
+    </script>
+</body>
+
+</html>

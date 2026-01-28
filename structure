@@ -1,0 +1,9 @@
+MyCloudApp/
+│
+├── app.py                (Main Python Code)
+├── requirements.txt      (Libraries list)
+├── static/
+│   └── style.css         (Design & Colors)
+└── templates/
+    ├── login.html        (Login Page)
+    └── index.html        (Main Dashboard)
