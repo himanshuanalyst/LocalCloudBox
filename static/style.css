@@ -197,3 +197,79 @@ a {
     transform: rotate(15deg);
     color: var(--primary-color);
 }
+
+/* --- MOBILE OPTIMIZATIONS (Responsive Design) --- */
+@media (max-width: 768px) {
+
+    /* 1. Navbar Adjustment */
+    .navbar-brand {
+        font-size: 1.1rem;
+    }
+
+    /* 2. Top Controls Stack Vertically */
+    .card-body {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 15px !important;
+    }
+
+    /* 3. Breadcrumb Full Width */
+    .breadcrumb {
+        justify-content: center;
+        margin-bottom: 5px;
+    }
+
+    /* 4. Search Bar & Buttons Full Width */
+    .d-flex.gap-2.align-items-center {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .input-group {
+        width: 100% !important;
+        /* Search bar full width */
+        margin-bottom: 10px;
+    }
+
+    .btn-group {
+        width: 100%;
+        display: flex;
+    }
+
+    .btn {
+        flex: 1;
+        /* Buttons barabar size ke honge */
+        padding: 10px;
+        /* Touch friendly padding */
+    }
+
+    /* 5. Hide less important columns on very small screens */
+    /* Agar aap chahte hain ki Date/Size mobile pe na dikhe taaki clean lage, 
+       to neeche wali lines ka comment hata dein: */
+
+    /* .table th:nth-child(3), .table td:nth-child(3), /* Date */
+    .table th:nth-child(5),
+    .table td:nth-child(5)
+
+    /* Size */
+        {
+        display: none;
+    }
+
+    */
+
+    /* 6. Table Horizontal Scroll Fix */
+    .table-responsive {
+        border: 1px solid var(--border-color);
+    }
+
+    /* 7. Modal Full Width on Mobile */
+    .modal-dialog {
+        margin: 10px;
+    }
+
+    /* 8. Drag Zone Compact */
+    .drop-zone {
+        padding: 2rem !important;
+    }
+}
